@@ -1,3 +1,5 @@
 # INE-Tableros-de-control-2021
 
-s
+El objetivo del tablero de control 'Estadísticas del Registro Federal de Electores' es suministrar información estadística y demográfica, a distintos niveles de desagregación geográfica, de los indicadores que conforman el Registro Federal de Electores (RFE). Es decir, en este tablero se proporciona información histórica del Padrón Electoral (PE) y de la Lista Nominal de Electores (LNE), esto con el propósito de facilitar, a las distintas áreas directivas y operativas del Instituto Nacional Electoral (INE), la consulta de estadísticas electorales que coadyuven a la planeación y toma de decisiones en torno a los programas de actualización y evaluación del RFE.
+
+Por otra parte, segundo tablero de control 'Estadísticas distritales de solicitudes y entregas de credencial. Periodo: 2017-2021' tiene como propósito principal el proporcionar información estadística relevante, a escala distrital, sobre los tramites de solicitud y entrega de la Credencial para Votar (CPV), considerando los plazos establecidos por el INE para la actualización del PE y los cortes de la LNE.
