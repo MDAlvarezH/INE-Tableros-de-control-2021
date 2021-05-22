@@ -1,0 +1,383 @@
+---
+title: "Estadísticas distritales de solicitudes y entregas de credencial. Periodo: 2017-2021"
+author: "Dirección de Estadística-Departamento de Evaluación Demográfica"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+    logo: ine_logo2.png
+---
+
+<style>                     
+.navbar {
+  background-color:#FF00FF;
+  border-color:white;
+}
+.navbar-brand {
+color:white!important;
+}
+</style> 
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(plotly)
+library(tidyverse)
+library(flexdashboard)
+
+
+#----------------------------------------------------------------------------------#
+################################# Paquetes y setup #################################
+#----------------------------------------------------------------------------------#
+
+library(pacman)
+p_load(tidyverse,
+       lubridate,
+       plotly,
+       ggthemes,
+       RColorBrewer,
+       datatable)
+
+#Prevenir notación científica
+options(scipen=999) 
+#Getting the path of your current open file
+#current_path = rstudioapi::getActiveDocumentContext()$path 
+#setwd(dirname(current_path))
+#print(getwd())
+
+
+
+#----------------------------------------------------------------------------------#
+############################# Datos originales #####################################
+#----------------------------------------------------------------------------------#
+
+#Datos por semana de todos los tramites y campañas
+Datos4 <- read_csv("Datos_Solicitudes_Entregas CPV_proc.csv", 
+    col_types = cols(Fecha = col_datetime(format = "%Y-%m-%d ")),
+    locale = locale(encoding = "ISO-8859-1"))
+#View(Datos4)
+#convertir a factor la columna Id
+Datos4$ID <- factor(Datos4$ID)
+#levels(Datos4$ID)
+#convertir a factor la columna tramite
+Datos4$Tramite <- as.factor(Datos4$Tramite)
+#convertir a factor la columna CAMPAÑA
+Datos4$Campaña <- as.factor(Datos4$Campaña)
+
+#Estadisticas por distrito, por tipo de tramite y por campaña
+Resumen2 <- read_csv("Resultados_Solicitudes_Entregas CPV_estadisticas.csv",
+    locale = locale(encoding = "ISO-8859-1"))
+#View(Resumen2)
+#convertir a factor la columna Id
+Resumen2$ID <- factor(Resumen2$ID)
+#convertir a factor la columna tramite
+Resumen2$Tramite <- as.factor(Resumen2$Tramite)
+#convertir a factor la columna CAMPAÑA
+Resumen2$Campaña <- as.factor(Resumen2$Campaña)
+
+#Datos promedio por campañas
+Resumen3 <- read_csv("Resultados_Solicitudes_Entregas CPV_promedios-campana.csv",
+    locale = locale(encoding = "ISO-8859-1"))
+#convertir a factor la columna Id
+Resumen3$ID <- factor(Resumen3$ID)
+#convertir a factor la columna CAMPAÑA
+Resumen3$Campaña <- as.factor(Resumen3$Campaña)
+
+#Estimacion para la CAP 2021
+Estimacion <- read_csv("Resultados_Solicitudes_Entregas CPV_estimacion_CAP2021.csv",
+    locale = locale(encoding = "ISO-8859-1"))
+#convertir a factor la columna Id
+Estimacion$ID <- factor(Estimacion$ID)
+#convertir a factor la columna tramite
+Estimacion$Tramite <- as.factor(Estimacion$Tramite)
+#convertir a factor la columna CAMPAÑA
+Estimacion$Campaña <- as.factor(Estimacion$Campaña)
+
+
+
+#----------------------------------------------------------------------------------#
+############################### opciones estéticas #################################
+#----------------------------------------------------------------------------------#
+
+f <- list(
+  size = 14,
+  color = "#7f7f7f"
+)
+
+xx <- list(
+  title = "Fecha",
+  titlefont = f
+)
+
+xx2 <- list(
+  title = "Promedio semanal de solicitudes",
+  titlefont = f
+)
+
+xx3 <- list(
+  title = "Número de trámites por semana",
+  titlefont = f
+)
+
+yy <- list(
+  title = "Número de trámites",
+  titlefont = f
+)
+
+yy2 <- list(
+  title = "Promedio semanal de entregas de CPV",
+  titlefont = f
+) 
+
+yy3 <- list(
+  title = "Tipo de trámite",
+  titlefont = f
+) 
+
+```
+
+
+Presentación{.sidebar}
+-----------------------------------------------------------------------
+
+El propósito principal de este tablero de control es proporcionar información estadística relevante, a escala distrital, sobre los tramites de solicitud y entrega de la Credencial para Votar (CPV), considerando los plazos establecidos por el Instituto Nacional Electoral (INE) para la actualización del Padrón Electoral y los cortes de la Lista Nominal de Electores, plazos que definen los periodos de las Campañas de Actualización Permanente (CAP) y de las Campañas Anuales Intensas (CAI).
+
+Para lograr este objetivo, se analizó la información histórica, por cada uno de los 300 distritos federales, de los registros de CPV entregadas, y del total de solicitudes recibidas en los Módulos de Atención Ciudadana (por total de solicitudes se engloban los siguientes tipos de solicitudes: Inscripción, Cambio de Domicilio, Corrección de Datos, Corrección de Domicilio, Reposición, Reemplazo y Reincorporación).  
+
+El análisis de los registros históricos se restringió al periodo comprendido entre septiembre de 2017 y abril de 2021, ya que la realización de este tablero de control tiene como objetivo secundario presentar una estimación de los tramites de solicitud y entrega de la CPV proyectados para la CAP 2021, considerando el contexto actual de la pandemia por COVID-19.
+
+A partir del análisis estadístico de las campañas de actualización realizadas en el periodo 2017-2021, se proponen tres escenarios para el total de solicitudes y entregas de CPV proyectadas para la CAP 2021 (EBaja, EMedia, EAlta). Los escenarios se construyeron mediante una metodología heurística que toma como punto de referencia el comportamiento observado en la CAP 2018, específicamente las distribuciones (por distrito) de los tramites y entregas captados semanalmente, lo cual permite establecer el escenario intermedio (estadística utilizada: mediana), el escenario bajo (estadística utilizada: primer cuantil o Q1) y el escenario alto (estadística utilizada: tercer cuantil o Q3).
+
+Para la realización de este tablero se utilizó como fuente de información los Reportes de Avance de Operativo por Módulo SIIRFE (2017-2021).
+
+
+Row{.tabset .tabset-fade data-height=600}
+-----------------------------------------------------------------------
+
+### Evolución de solicitudes y entrega de credenciales a nivel distrital
+
+```{r}
+#se crea lista de renglones con fecha de suspension de labores en los modulos por pandemia
+m <- as.Date("2020-03-23")
+m2 <- as.Date("2020-08-17")
+vline <- function(x = 0, color = "gray") {
+  list(
+    type = "line", 
+    y0 = 0, 
+    y1 = 1, 
+    yref = "paper",
+    x0 = x, 
+    x1 = x, 
+    line = list(color = color, width=2, dash="dashdot")
+  )
+}
+
+#en caso de que sea muy grande el archivo html, hay que filtrar
+#filter(Tramite %in% c('TOTAL_SOLICITUDES','ENTREGA_CPV')) %>% 
+
+#figura en plotly
+fig0 <- Datos4 %>%
+  plot_ly(
+    x = ~Fecha, 
+    y = ~Numero,
+    customdata = ~ID,
+    color = ~factor(Tramite),
+    text = ~paste(ID,
+                  '<br>Campaña:', Campaña,
+                  '<br>Fecha de corte:', Fecha,
+                  '<br>Semana operativa:', Semana,
+                  '<br>Número de trámites en la semana:', format(Numero,big.mark=",", trim=TRUE)
+    ),
+    hoverinfo = 'text',
+    transforms = list(
+      list(
+        type = 'filter',
+        target = "customdata",
+        operation = '=',
+        value = unique(Datos4$ID)[1]
+      )
+    )) %>% 
+  add_trace(type = 'scatter',
+            mode='lines+markers'
+  )%>%
+    layout(xaxis = xx, 
+         yaxis = yy,
+         legend = list(
+           font = list(
+             size = 10,
+             color = "#000"),
+           orientation = 'h',
+           x = 0.4, 
+           y = -0.2),
+         updatemenus = list(
+           list(direction = "down",
+                xanchor = 'right',
+                yanchor = "top",
+                x = 0.1,
+                y= 1.1,
+                font = list(
+                  size = 10),
+                type = 'dropdown',
+                active = 0,
+                buttons = apply(as.data.frame(as.factor(unique(Datos4$ID))), 1, 
+                                function(x) list(method = 'restyle',args = list('transforms[0].value',x),label = x)))
+         )
+  )%>%
+  toWebGL() %>% add_annotations(x = m,
+                                y = 1,
+                                text = "Cierre de módulos por emergencia sanitaria COVID-19",
+                                xref = "x",
+                                yref = "paper",
+                                showarrow = TRUE,
+                                arrowhead = 5,
+                                ax = -25,
+                                ay = -20,
+                                font = list(color = 'gray', size = 8)) %>% 
+  add_annotations(x = m2,
+                  y = 1,
+                  text = "Apertura de módulos con medidas sanitarias",
+                  xref = "x",
+                  yref = "paper",
+                  showarrow = TRUE,
+                  arrowhead = 5,
+                  ax = 25,
+                  ay = -20,
+                  font = list(color = 'gray', size = 8)) %>% 
+  layout(shapes = list(vline(m), vline(m2)))
+  
+
+fig0
+```
+
+
+### Promedio semanal de solicitudes vs promedio semanal de entrega de credenciales, por distrito y por campaña 
+
+```{r}
+fig1 <- Resumen3 %>% 
+  plot_ly(
+    x = ~PROMEDIO_SEMANAL_TOTAL_SOLICITUDES, 
+    y = ~PROMEDIO_SEMANAL_ENTREGA_CPV,
+    color = ~Campaña,
+    customdata = ~ID,
+    text = ~paste(ID,
+                  '<br>Campaña:', Campaña,
+                  '<br>Promedio semanal de solicitudes:', format(PROMEDIO_SEMANAL_TOTAL_SOLICITUDES,big.mark=",",trim=TRUE),
+                  '<br>Promedio semanal de entregas de CPV:', format(PROMEDIO_SEMANAL_ENTREGA_CPV,big.mark=",", trim=TRUE)),
+    hoverinfo = 'text') %>% 
+  add_trace(type = 'scatter',
+            mode='markers'
+  )%>%
+  layout(xaxis = xx2, 
+         yaxis = yy2,
+         legend = list(
+           font = list(
+             size = 12,
+             color = "#000"),
+           orientation = 'v',
+           x = 1, 
+           y = 0.4))%>%
+  toWebGL() 
+
+
+fig1
+```
+
+
+### Gráficas de caja por tipo de trámite, por campaña, y por distrito
+
+```{r}
+fig2 <- Datos4 %>%
+  plot_ly(x = ~Tramite, 
+          y = ~Numero,
+          customdata = ~ID,
+          color = ~Campaña, 
+          type = "box",
+          boxpoints = "suspectedoutliers",
+          transforms = list(
+            list(
+              type = 'filter',
+              target = "customdata",
+              operation = '=',
+              value = unique(Datos4$ID)[1]
+            )
+          )) %>% layout(xaxis = yy3, 
+                        yaxis = xx3,
+                        boxmode = "group",
+                        legend = list(
+                          font = list(
+                            size = 12,
+                            color = "#000")),
+                        updatemenus = list(
+                          list(direction = "down",
+                               xanchor = 'right',
+                               yanchor = "top",
+                               x = 0.1,
+                               y= 1.1,
+                               font = list(
+                                 size = 10),
+                               type = 'dropdown',
+                               active = 0,
+                               buttons = apply(as.data.frame(as.factor(unique(Datos4$ID))), 1, 
+                                               function(x) list(method = 'restyle',args = list('transforms[0].value',x),label = x)))
+                        ))
+
+fig2
+```
+
+
+Row{.tabset data-height=400}
+-----------------------------------------------------------------------
+
+### Datos históricos (2017-2021)
+
+```{r}
+DT::datatable(Datos4[,c(9,7,10,5,6,8)],
+              filter = 'top',
+              extensions = c('Buttons','KeyTable','Scroller'),
+              options = list(
+  bPaginate = TRUE,
+  dom = 'Bfrtip',
+  buttons = c('csv', 'excel'),
+  fixedHeader = TRUE,
+  keys = TRUE,
+  deferRender = TRUE,
+  scrollY = 200,
+  scroller = TRUE
+))
+```
+
+### Estadísticas de tendencia central, por tipo de trámite, a nivel distrital
+
+```{r}
+DT::datatable(Resumen2,
+              filter = 'top',
+              extensions = c('Buttons','KeyTable','Scroller'),
+              options = list(
+  bPaginate = TRUE,
+  dom = 'Bfrtip',
+  buttons = c('csv', 'excel'),
+  fixedHeader = TRUE,
+  keys = TRUE,
+  deferRender = TRUE,
+  scrollY = 200,
+  scroller = TRUE
+))
+```
+
+
+### Escenarios propuestos para la CAP 2021
+
+```{r}
+DT::datatable(Estimacion,
+              filter = 'top',
+              extensions = c('Buttons','KeyTable','Scroller'), 
+              options = list(
+  bPaginate = TRUE,
+  dom = 'Bfrtip',
+  buttons = c('csv', 'excel'),
+  fixedHeader = TRUE,
+  keys = TRUE,
+  deferRender = TRUE,
+  scrollY = 200,
+  scroller = TRUE
+))
+```
